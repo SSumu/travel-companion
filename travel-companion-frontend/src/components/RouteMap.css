@@ -1,0 +1,20 @@
+.route-map-container {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.route-map {
+  width: 100%;
+  height: 450px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  border: 2px solid #e5e7eb;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .route-map {
+    height: 320px;
+  }
+}

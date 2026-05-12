@@ -1,0 +1,55 @@
+.bus-list-container {
+  width: 100%;
+  padding: 30px 20px;
+}
+
+.bus-list-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #222;
+  text-align: center;
+}
+
+.bus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.no-buses {
+  width: 100%;
+  padding: 60px 20px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 14px;
+  margin-top: 30px;
+}
+
+.no-buses h2 {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.no-buses p {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .bus-list-container {
+    padding: 20px 10px;
+  }
+
+  .bus-list-title {
+    font-size: 1.6rem;
+  }
+
+  .bus-grid {
+    gap: 18px;
+  }
+}

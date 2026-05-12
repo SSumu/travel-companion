@@ -1,0 +1,104 @@
+.bus-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.bus-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.bus-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bus-card-header h2 {
+  font-size: 24px;
+  color: #1f2937;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 7px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.running {
+  background: #22c55e;
+}
+
+.faulty {
+  background: #ef4444;
+}
+
+.stopped {
+  background: #f59e0b;
+}
+
+.bus-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bus-card-body p {
+  margin: 0;
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.bus-card-body strong {
+  color: #111827;
+}
+
+.bus-card-footer {
+  margin-top: 10px;
+}
+
+.route-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.route-btn:hover {
+  background: #1d4ed8;
+}
+
+.route-btn:active {
+  transform: scale(0.98);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .bus-card {
+    padding: 18px;
+  }
+
+  .bus-card-header h2 {
+    font-size: 20px;
+  }
+
+  .route-btn {
+    font-size: 14px;
+  }
+}

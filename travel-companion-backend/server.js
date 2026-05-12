@@ -8,20 +8,25 @@ import routeRoutes from "./routes/routeRoutes.js";
 
 dotenv.config();
 
+// Database connection
 connectDB();
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Routes
 app.use("/api/buses", busRoutes);
 app.use("/api/routes", routeRoutes);
 
+// Test Route
 app.get("/", (req, res) => {
-  res.send("Bus Tracking API Running");
+  res.send("Bus Tracking API Running...");
 });
 
+// Server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
