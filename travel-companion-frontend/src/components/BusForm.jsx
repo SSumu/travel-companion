@@ -1,6 +1,16 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  Polyline,
+} from "@react-google-maps/api";
 import { createBus } from "../services/busService";
 import "./BusForm.css";
+
+const mapContainerStyle = { width: "100%", height: "400px" };
+
+const center = { lat: 6.9271, lng: 79.8612 };
 
 export default function BusForm() {
   const [formData, setFormData] = useState({
@@ -13,8 +23,9 @@ export default function BusForm() {
     operatingTo: "",
     intervalMinutes: 30,
     status: "Running",
-    routeCoordinates: "",
   });
+
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -25,24 +36,34 @@ export default function BusForm() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // MAP CLICK
+  const onMapClick = useCallback((event) => {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+    setRouteCoordinates((prev) => [...prev, { lat, lng }]);
+  }, []);
+
+  // CLEAR ROUTE
+  const clearRoute = () => setRouteCoordinates([]);
+
   /*
     CONVERT COORDINATES STRING TO ARRAY
     Example:
     6.9271,79.8612
     6.9371,79.8712
   */
-  const parseCoordinates = (text) => {
-    if (!text.trim()) return [];
+  // const parseCoordinates = (text) => {
+  //   if (!text.trim()) return [];
 
-    return text
-      .split("\n")
-      .map((line) => {
-        const [lat, lng] = line.split(",");
+  //   return text
+  //     .split("\n")
+  //     .map((line) => {
+  //       const [lat, lng] = line.split(",");
 
-        return { lat: Number(lat.trim()), lng: Number(lng.trim()) };
-      })
-      .filter((coord) => !isNaN(coord.lat) && !isNaN(coord.lng));
-  };
+  //       return { lat: Number(lat.trim()), lng: Number(lng.trim()) };
+  //     })
+  //     .filter((coord) => !isNaN(coord.lat) && !isNaN(coord.lng));
+  // };
 
   //  SUBMIT FORM
   const handleSubmit = async (e) => {
@@ -56,7 +77,8 @@ export default function BusForm() {
       const payload = {
         ...formData,
         intervalMinutes: Number(formData.intervalMinutes),
-        routeCoordinates: parseCoordinates(formData.routeCoordinates),
+        // routeCoordinates: parseCoordinates(formData.routeCoordinates),
+        routeCoordinates,
       };
 
       await createBus(payload);
@@ -75,8 +97,10 @@ export default function BusForm() {
         operatingTo: "",
         intervalMinutes: 30,
         status: "Running",
-        routeCoordinates: "",
+        // routeCoordinates: "",
       });
+
+      setRouteCoordinates([]);
     } catch (error) {
       console.log(error);
 
@@ -167,11 +191,11 @@ export default function BusForm() {
 
         {/* OPERATING FROM */}
         <div className="form-group">
-          <label>Operating Form</label>
+          <label>Operating From</label>
 
           <input
             type="time"
-            name="operatingForm"
+            name="operatingFrom"
             value={formData.operatingFrom}
             onChange={handleChange}
             required
@@ -216,20 +240,47 @@ export default function BusForm() {
           </select>
         </div>
 
-        {/* ROUTE COORDINATES */}
+        {/* GOOGLE MAP */}
         <div className="form-group">
-          <label>Route Coordinates</label>
+          <label>Route Map</label>
 
-          <textarea
-            name="routeCoordinates"
-            rows="6"
-            placeholder={`Example:
-                6.9271,79.8612
-                6.9371,79.8712
-                6.9471,79.8812`}
-            value={formData.routeCoordinates}
-            onChange={handleChange}
-          />
+          <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+          >
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              zoom={12}
+              center={center}
+              onClick={onMapClick}
+            >
+              {/* MARKERS */}
+              {routeCoordinates.map((coord, index) => (
+                <Marker key={index} position={coord} label={`${index + 1}`} />
+              ))}
+              {/* ROUTE LINE */}
+              <Polyline
+                path={routeCoordinates}
+                options={{
+                  strokeColor: "#1976d2",
+                  strokeOpacity: 1,
+                  strokeWeight: 4,
+                }}
+              />
+            </GoogleMap>
+          </LoadScript>
+          <button type="button" className="clear-btn" onClick={clearRoute}>
+            Clear Route
+          </button>
+        </div>
+
+        {/* COORDINATE PREVIEW */}
+        <div className="coordinates-preview">
+          <h4>Selected Coordinates</h4>{" "}
+          {routeCoordinates.map((coord, index) => (
+            <p key={index}>
+              {coord.lat}, {coord.lng}
+            </p>
+          ))}
         </div>
 
         {/* SUBMIT BUTTON */}
