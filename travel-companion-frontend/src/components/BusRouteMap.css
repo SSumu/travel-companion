@@ -1,0 +1,68 @@
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gmaps-route-box {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 10;
+  width: 320px;
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.route-input-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.route-input-item input {
+  flex: 1;
+  padding: 10px;
+}
+
+.route-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.route-actions button,
+.remove-stop-btn {
+  cursor: pointer;
+}
+
+.map-error {
+  color: red;
+  margin-top: 10px;
+}
+
+.route-summary {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+
+  background: white;
+  padding: 12px 15px;
+  border-radius: 10px;
+
+  box-shadow: o 4px 12px rgba(0, 0, 0, 0.15);
+
+  max-width: 280px;
+}
+
+.route-summary p {
+  margin: 0 0 6px;
+}
+
+.route-summary p:last-child {
+  margin-bottom: 0;
+}

@@ -1,18 +1,16 @@
-import { useCallback, useState } from "react";
-import {
-  GoogleMap,
-  LoadScript,
-  Marker,
-  Polyline,
-} from "@react-google-maps/api";
+import { useState } from "react";
 import { createBus } from "../services/busService";
 import "./BusForm.css";
-
-const mapContainerStyle = { width: "100%", height: "400px" };
-
-const center = { lat: 6.9271, lng: 79.8612 };
+import BusRouteMap from "./BusRouteMap";
 
 export default function BusForm() {
+  // STATES
+  const [routePath, setRoutePath] = useState([]); // ROUTE PATH
+  const [loading, setLoading] = useState(false); // LOADING
+  const [message, setMessage] = useState(""); // SUCCESS MESSAGE
+  const [error, setError] = useState(""); // ERROR MESSAGE
+
+  // FORM DATA
   const [formData, setFormData] = useState({
     busNumber: "",
     driverName: "",
@@ -25,68 +23,43 @@ export default function BusForm() {
     status: "Running",
   });
 
-  const [routeCoordinates, setRouteCoordinates] = useState([]);
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
   // HANDLE INPUT CHANGE
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // MAP CLICK
-  const onMapClick = useCallback((event) => {
-    const lat = event.latLng.lat();
-    const lng = event.latLng.lng();
-    setRouteCoordinates((prev) => [...prev, { lat, lng }]);
-  }, []);
-
-  // CLEAR ROUTE
-  const clearRoute = () => setRouteCoordinates([]);
-
-  /*
-    CONVERT COORDINATES STRING TO ARRAY
-    Example:
-    6.9271,79.8612
-    6.9371,79.8712
-  */
-  // const parseCoordinates = (text) => {
-  //   if (!text.trim()) return [];
-
-  //   return text
-  //     .split("\n")
-  //     .map((line) => {
-  //       const [lat, lng] = line.split(",");
-
-  //       return { lat: Number(lat.trim()), lng: Number(lng.trim()) };
-  //     })
-  //     .filter((coord) => !isNaN(coord.lat) && !isNaN(coord.lng));
-  // };
-
-  //  SUBMIT FORM
+  // HANDLE SUBMIT FORM
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // VALIDATE ROUTE
+      if (!routePath.length) {
+        setError("Please create a route first");
+        return;
+      }
+
       setLoading(true);
-      setError("");
+
       setMessage("");
 
+      setError("");
+
+      // PAYLOAD
       const payload = {
         ...formData,
+
         intervalMinutes: Number(formData.intervalMinutes),
-        // routeCoordinates: parseCoordinates(formData.routeCoordinates),
-        routeCoordinates,
+
+        routeCoordinates: routePath,
       };
 
+      // API CALL
       await createBus(payload);
-
-      // alert('Bus Added Successfully')
 
       setMessage("Bus Added Successfully!");
 
+      // RESET FORM
       setFormData({
         busNumber: "",
         driverName: "",
@@ -97,10 +70,10 @@ export default function BusForm() {
         operatingTo: "",
         intervalMinutes: 30,
         status: "Running",
-        // routeCoordinates: "",
       });
 
-      setRouteCoordinates([]);
+      // RESET ROUTE
+      setRoutePath([]);
     } catch (error) {
       console.log(error);
 
@@ -115,9 +88,13 @@ export default function BusForm() {
       <form className="bus-form" onSubmit={handleSubmit}>
         <h2>Add New Bus</h2>
 
+        {/* SUCCESS MESSAGE */}
         {message && <div className="success-message">{message}</div>}
 
+        {/* ERROR MESSAGE */}
         {error && <div className="error-message">{error}</div>}
+
+        {/* FORM INPUTS */}
 
         {/* BUS NUMBER */}
         <div className="form-group">
@@ -156,34 +133,6 @@ export default function BusForm() {
             name="roadName"
             placeholder="Enter road name"
             value={formData.roadName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* START LOCATION */}
-        <div className="form-group">
-          <label>Start Location</label>
-
-          <input
-            type="text"
-            name="startLocation"
-            placeholder="Enter start location"
-            value={formData.startLocation}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* END LOCATION */}
-        <div className="form-group">
-          <label>End Location</label>
-
-          <input
-            type="text"
-            name="endLocation"
-            placeholder="Enter end location"
-            value={formData.endLocation}
             onChange={handleChange}
             required
           />
@@ -240,47 +189,18 @@ export default function BusForm() {
           </select>
         </div>
 
+        {/* Map Section */}
+
         {/* GOOGLE MAP */}
         <div className="form-group">
           <label>Route Map</label>
 
-          <LoadScript
-            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-          >
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              zoom={12}
-              center={center}
-              onClick={onMapClick}
-            >
-              {/* MARKERS */}
-              {routeCoordinates.map((coord, index) => (
-                <Marker key={index} position={coord} label={`${index + 1}`} />
-              ))}
-              {/* ROUTE LINE */}
-              <Polyline
-                path={routeCoordinates}
-                options={{
-                  strokeColor: "#1976d2",
-                  strokeOpacity: 1,
-                  strokeWeight: 4,
-                }}
-              />
-            </GoogleMap>
-          </LoadScript>
-          <button type="button" className="clear-btn" onClick={clearRoute}>
-            Clear Route
-          </button>
-        </div>
-
-        {/* COORDINATE PREVIEW */}
-        <div className="coordinates-preview">
-          <h4>Selected Coordinates</h4>{" "}
-          {routeCoordinates.map((coord, index) => (
-            <p key={index}>
-              {coord.lat}, {coord.lng}
-            </p>
-          ))}
+          <BusRouteMap
+            routePath={routePath}
+            setRoutePath={setRoutePath}
+            formData={formData}
+            setFormData={setFormData}
+          />
         </div>
 
         {/* SUBMIT BUTTON */}
