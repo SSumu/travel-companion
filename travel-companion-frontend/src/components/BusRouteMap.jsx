@@ -7,8 +7,9 @@ import {
   useJsApiLoader,
 } from "@react-google-maps/api";
 import "./BusRouteMap.css";
-import PlaceAutocompleteInput from "./PlaceAutocompleteInput";
 import AdvancedUserMarker from "./AdvancedUserMarker";
+import PlaceAutocompleteInput from "./PlaceAutocompleteInput";
+import FloatingDirectionsPanel from "./FloatingDirectionsPanel";
 
 const mapContainerStyle = { width: "100%", height: "600px" };
 
@@ -24,9 +25,12 @@ export default function BusRouteMap({
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
 
+  // AUTO SEARCH DEBOUNCE
+  const debounceRef = useRef(null);
+
   const libraries = ["places", "marker"];
 
-  // LOAD GOOGLE MAPS
+  // GOOGLE MAPS LOADER
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -36,7 +40,7 @@ export default function BusRouteMap({
   // STATES
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [stops, setStops] = useState([""]);
+  const [stops, setStops] = useState([]);
   const [stopValues, setStopValues] = useState([]);
 
   const [map, setMap] = useState(null);
@@ -52,9 +56,15 @@ export default function BusRouteMap({
     setMap(mapInstance); // ✅ safe reactive reference
   }, []);
 
-  // AUTO DRAW ROUTE | ROUTE CALCULATION
+  // AUTO SEARCH (DEBOUNCE)
+  const debounceCalculateRoute = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => calculateRoute(), 800);
+  };
+
+  // AUTO DRAW ROUTE | ROUTE CALCULATION | CALCULATE ROUTE
   const calculateRoute = async () => {
-    if (!origin || destination) return;
+    if (!origin || !destination) return;
 
     try {
       const directionsService = new window.google.maps.DirectionsService();
@@ -98,8 +108,10 @@ export default function BusRouteMap({
 
       // PREVENT CRASH
       if (mapRef.current) mapRef.current.fitBounds(bounds);
+
+      setError("");
     } catch (error) {
-      console.log("Directions Error:", error);
+      console.error("Directions Error:", error);
 
       setError("Failed to calculate route");
     }
@@ -116,14 +128,14 @@ export default function BusRouteMap({
     setStops((prev) => prev.filter((_, i) => i !== index));
     setStopValues((prev) => prev.filter((_, i) => i !== index));
 
-    setTimeout(() => calculateRoute(), 0);
+    setTimeout(() => debounceCalculateRoute(), 0);
   };
 
   // CLEAR ROUTE
   const clearRoute = () => {
     setOrigin("");
     setDestination("");
-    setStops([""]);
+    setStops([]);
     setStopValues([]);
     setDirections(null);
     setRoutePath([]);
@@ -137,6 +149,23 @@ export default function BusRouteMap({
       mapRef.current.setZoom(15);
     }
   }, [userLocation]);
+
+  // USE CURRENT LOCATION AS START
+  const setCurrentLocationAsStart = async () => {
+    if (!userLocation) return;
+
+    const geocoder = new window.google.maps.Geocoder();
+
+    geocoder.geocode({ location: userLocation }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        const address = results[0].formatted_address;
+
+        setOrigin(address);
+
+        debounceCalculateRoute();
+      }
+    });
+  };
 
   // STOP WATCHER ON COMPONENT UNMOUNT | LIVE LOCATION TRACKING | GEOLOCATION WATCHER
   useEffect(() => {
@@ -165,7 +194,7 @@ export default function BusRouteMap({
         setLocating(false);
       },
       (error) => {
-        console.log("Geolocation Error:", error);
+        console.error("Geolocation Error:", error);
 
         setLocating(false);
 
@@ -184,6 +213,7 @@ export default function BusRouteMap({
     };
   }, []);
 
+  // RENDER
   return (
     <div className="map-wrapper">
       {!isLoaded ? (
@@ -206,89 +236,29 @@ export default function BusRouteMap({
             </button>
           </div>
 
-          {/* DIRECTIONS PANEL | FLOATING DIRECTIONS PANEL | ROUTE PANEL */}
-          <div className="gmaps-route-box">
-            {/* START */}
-            <div className="route-input-item">
-              <PlaceAutocompleteInput
-                placeholder="Choose starting point"
-                onPlaceSelect={(place) => {
-                  console.log(place);
+          {/* DIRECTIONS PANEL */}
+          <FloatingDirectionsPanel
+            // data
+            stops={stops}
+            locating={locating}
+            error={error}
+            // handlers
+            setCurrentLocationAsStart={setCurrentLocationAsStart}
+            addStopField={addStopField}
+            removeStopField={removeStopField}
+            goToCurrentLocation={goToCurrentLocation}
+            clearRoute={clearRoute}
+            calculateRoute={calculateRoute}
+            debounceCalculateRoute={debounceCalculateRoute}
+            // setters
+            setOrigin={setOrigin}
+            setDestination={setDestination}
+            setStopValues={setStopValues}
+            // component
+            PlaceAutocompleteInput={PlaceAutocompleteInput}
+          />
 
-                  const value =
-                    place.formattedAddress || place.displayName || "";
-
-                  setOrigin(value);
-                  calculateRoute();
-                }}
-              />
-            </div>
-
-            {/* STOPS */}
-            {stops.map((_, index) => (
-              <div key={index} className="route-input-item">
-                <PlaceAutocompleteInput
-                  placeholder={`Add stop ${index + 1}`}
-                  onPlaceSelect={(place) => {
-                    console.log(place);
-
-                    const value =
-                      place.formattedAddress || place.displayName || "";
-
-                    setStopValues((prev) => {
-                      const updated = [...prev];
-                      updated[index] = value;
-                      return updated;
-                    });
-                    calculateRoute();
-                  }}
-                />
-
-                <button
-                  type="button"
-                  className="remove-stop-btn"
-                  onClick={() => removeStopField(index)}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-
-            {/* DESTINATION */}
-            <div className="route-input-item">
-              <PlaceAutocompleteInput
-                placeholder="Choose destination"
-                onPlaceSelect={(place) => {
-                  console.log(place);
-
-                  const value =
-                    place.formattedAddress || place.displayName || "";
-
-                  setDestination(value);
-                  calculateRoute();
-                }}
-              />
-            </div>
-
-            {/* ACTION BUTTONS */}
-            <div className="route-actions">
-              <button type="button" onClick={addStopField}>
-                + Add Stop
-              </button>
-
-              <button type="button" onClick={goToCurrentLocation}>
-                {locating ? "Locating..." : "My Location"}
-              </button>
-
-              <button type="button" onClick={clearRoute}>
-                Clear
-              </button>
-            </div>
-
-            {error && <p className="map-error">{error}</p>}
-          </div>
-
-          {/* ROUTE INFO */}
+          {/* ROUTE INFO | SUMMARY */}
           {formData.startLocation && formData.endLocation && (
             <div className="route-summary">
               <p>
@@ -350,6 +320,7 @@ export default function BusRouteMap({
                 directions={directions}
                 options={{
                   suppressMarkers: false,
+
                   polylineOptions: {
                     strokeColor: "#1976d2",
                     strokeWeight: 5,

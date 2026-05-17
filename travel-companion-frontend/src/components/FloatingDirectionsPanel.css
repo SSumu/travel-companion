@@ -1,0 +1,84 @@
+.gmaps-route-box {
+  position: absolute;
+  z-index: 10;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.gmaps-route-box.collapsed {
+  width: 200px;
+  max-height: 170px;
+}
+
+.gmaps-route-box.expanded {
+  width: 420px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.drag-handle {
+  background: #1976d2;
+  color: white;
+  padding: 12px;
+  cursor: grab;
+  user-select: none;
+  font-weight: bold;
+}
+
+.panel-content {
+  padding: 10px;
+}
+
+.collapsed-content {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.route-input-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  border-radius: 20px;
+}
+
+.full-btn {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+}
+
+.search-btn {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.route-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.route-actions button {
+  flex: 1;
+  padding: 8px;
+}
+
+.remove-stop-btn {
+  background: red;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.map-error {
+  color: red;
+  margin-top: 10px;
+}
