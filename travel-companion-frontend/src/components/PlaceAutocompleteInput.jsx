@@ -1,36 +1,83 @@
 import { useEffect, useRef } from "react";
 
-export default function PlaceAutocompleteInput({ onPlaceSelect, placeholder }) {
+export default function PlaceAutocompleteInput({
+  onPlaceSelect,
+  placeholder,
+  onFocus,
+  onBlur,
+  onValueChange,
+}) {
   const containerRef = useRef(null);
+  const autocompleteRef = useRef(null);
 
   useEffect(() => {
-    let autocomplete;
+    // let autocomplete;
     let isMounted = true;
 
     const init = async () => {
       if (!window.google || !containerRef.current) return;
 
-      // REQUIRED for PlaceAutocompleteElement
+      // REQUIRED for PlaceAutocompleteElement | Load Places library
       await window.google.maps.importLibrary("places");
 
       if (!isMounted || !containerRef.current) return;
 
-      autocomplete = new window.google.maps.places.PlaceAutocompleteElement();
+      // Create Element
+      const autocomplete =
+        new window.google.maps.places.PlaceAutocompleteElement();
 
       autocomplete.placeholder = placeholder;
 
-      autocomplete.addEventListener(
-        "gmp-placeselect",
-        async ({ placePrediction }) => {
-          const place = placePrediction.toPlace();
+      // ✅ Handle place selection
+      const onPlaceSelectHandler = async ({ placePrediction }) => {
+        const place = placePrediction.toPlace();
 
-          await place.fetchFields({
-            fields: ["displayName", "formattedAddress", "location"],
-          });
+        await place.fetchFields({
+          fields: ["displayName", "formattedAddress", "location"],
+        });
 
-          onPlaceSelect(place);
-        },
-      );
+        onPlaceSelect(place);
+      };
+
+      // KEEP PANEL EXPANDED WHILE TYPING
+      const onInputHandler = (e) => {
+        const value = e.target.value || "";
+
+        if (onValueChange) onValueChange(value);
+      };
+
+      // FOCUS
+      const handleFocus = () => {
+        if (onFocus) onFocus();
+      };
+
+      // BLUR
+      const handleBlur = () => {
+        if (onBlur) onBlur();
+      };
+
+      autocomplete.addEventListener("gmp-placeselect", onPlaceSelectHandler);
+
+      // Bridge to parent panel
+      // Detect Input
+      autocomplete.addEventListener("input", onInputHandler);
+
+      // Detect focus
+      autocomplete.addEventListener("focus", handleFocus);
+
+      // Detect blur
+      autocomplete.addEventListener("blur", handleBlur);
+
+      // Save refs for cleanup
+      autocompleteRef.current = {
+        el: autocomplete,
+        onPlaceSelectHandler,
+        onInputHandler,
+        handleFocus,
+        handleBlur,
+      };
+
+      containerRef.current.innerHTML = "";
 
       containerRef.current.appendChild(autocomplete);
     };
@@ -41,9 +88,19 @@ export default function PlaceAutocompleteInput({ onPlaceSelect, placeholder }) {
     return () => {
       isMounted = false;
 
-      if (autocomplete) autocomplete.remove();
+      const ref = autocompleteRef.current;
+
+      if (ref?.el) {
+        ref.el.removeEventListener("gmp-placeselect", ref.onPlaceSelectHandler);
+        ref.el.removeEventListener("input", ref.onInputHandler);
+        ref.el.removeEventListener("focus", ref.handleFocus);
+        ref.el.removeEventListener("blur", ref.handleBlur);
+        ref.el.remove();
+      }
+
+      autocompleteRef.current = null;
     };
-  }, [placeholder, onPlaceSelect]);
+  }, [placeholder, onPlaceSelect, onFocus, onBlur, onValueChange]);
 
   return <div ref={containerRef} />;
 }
