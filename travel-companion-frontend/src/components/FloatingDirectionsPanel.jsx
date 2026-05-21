@@ -1,9 +1,12 @@
-import { /*useEffect,*/ useRef, useState } from "react";
+import { useRef, useState } from "react";
 import "./FloatingDirectionsPanel.css";
+import PlaceAutocompleteInput from "./PlaceAutocompleteInput";
 
 export default function FloatingDirectionsPanel({
   //   route data
   stopValues,
+
+  // STATUS
   locating,
   error,
 
@@ -13,6 +16,8 @@ export default function FloatingDirectionsPanel({
   removeStopField,
   goToCurrentLocation,
   clearRoute,
+
+  // ROUTE ACTIONS
   calculateRoute,
   debounceCalculateRoute,
 
@@ -20,9 +25,6 @@ export default function FloatingDirectionsPanel({
   setOrigin,
   setDestination,
   setStopValues,
-
-  //   component
-  PlaceAutocompleteInput,
 }) {
   // PANEL STATE (NEW)
   const [panelExpanded, setPanelExpanded] = useState(false);
@@ -35,7 +37,9 @@ export default function FloatingDirectionsPanel({
   const isDraggingRef = useRef(false); // DRAGGING REF
 
   // 🔥 Draggable panel
+  // PANEL POSITION
   const [panelPos, setPanelPos] = useState({ x: 20, y: 80 });
+  // DRAG STATE
   const [isDragging, setIsDragging] = useState(false);
 
   // INPUT INTERACTION LOCK
@@ -69,6 +73,7 @@ export default function FloatingDirectionsPanel({
   // POINTER UP
   const onPointerUp = () => {
     isDraggingRef.current = false;
+
     setIsDragging(false);
 
     window.removeEventListener("pointermove", onPointerMove);
@@ -139,17 +144,37 @@ export default function FloatingDirectionsPanel({
                 setPanelExpanded(true);
               }}
               onBlur={() => setIsFocused(false)}
-              onValueChange={(value) => setHasInputValue(value.trim() !== "")}
+              // onValueChange={(value) => setHasInputValue(value.trim() !== "")}
+              onValueChange={(value) =>
+                setHasInputValue(
+                  typeof value === "string" && value.trim() !== "",
+                )
+              }
               onPlaceSelect={(place) => {
-                console.log(place);
+                console.log("Origin", place);
 
-                const value = place.formattedAddress || place.displayName || "";
+                if (!place?.location) {
+                  console.error("Invalid origin place");
+                  return;
+                }
 
+                // const value = place.formattedAddress || place.displayName || "";
+
+                const value = {
+                  lat: place.location.lat(),
+                  lng: place.location.lng(),
+                };
+
+                // UPDATE ORIGIN
                 setOrigin(value);
+                // setOrigin(String(value));
 
-                setHasInputValue(value.trim() !== "");
+                // KEEP PANEL OPEN
+                // setHasInputValue(value.trim() !== "");
+                setHasInputValue(true);
 
-                debounceCalculateRoute();
+                // AUTO SEARCH (OPTIONAL)
+                if (debounceCalculateRoute) debounceCalculateRoute();
               }}
             />
           </div>
@@ -158,7 +183,7 @@ export default function FloatingDirectionsPanel({
           <button
             type="button"
             className="full-btn"
-            onClick={setCurrentLocationAsStart}
+            onClick={() => setCurrentLocationAsStart()}
           >
             📍 Use My Location as Start
           </button>
@@ -173,25 +198,45 @@ export default function FloatingDirectionsPanel({
                   setPanelExpanded(true);
                 }}
                 onBlur={() => setIsFocused(false)}
-                onValueChange={(value) => setHasInputValue(value.trim() !== "")}
+                // onValueChange={(value) => setHasInputValue(value.trim() !== "")}
+                onValueChange={(value) =>
+                  setHasInputValue(
+                    typeof value === "string" && value.trim() !== "",
+                  )
+                }
                 onPlaceSelect={(place) => {
-                  console.log(place);
+                  console.log("Stop:", place);
 
-                  const value =
-                    place.formattedAddress || place.displayName || "";
+                  if (!place?.location) {
+                    console.error("Invalid stop place");
+                    return;
+                  }
 
+                  // const value =
+                  //   place.formattedAddress || place.displayName || "";
+
+                  const value = {
+                    lat: place.location.lat(),
+                    lng: place.location.lng(),
+                  };
+
+                  // UPDATE STOP
                   setStopValues((prev) => {
                     const updated = [...prev];
                     updated[index] = value;
                     return updated;
                   });
 
-                  setHasInputValue(value.trim() !== "");
+                  // KEEP PANEL OPEN
+                  // setHasInputValue(value.trim() !== "");
+                  setHasInputValue(true);
 
-                  debounceCalculateRoute();
+                  // AUTO SEARCH
+                  if (debounceCalculateRoute) debounceCalculateRoute();
                 }}
               />
 
+              {/* REMOVE STOP */}
               <button
                 type="button"
                 className="remove-stop-btn"
@@ -211,41 +256,79 @@ export default function FloatingDirectionsPanel({
                 setPanelExpanded(true);
               }}
               onBlur={() => setIsFocused(false)}
-              onValueChange={(value) => setHasInputValue(value.trim() !== "")}
+              // onValueChange={(value) => setHasInputValue(value.trim() !== "")}
+              onValueChange={(value) =>
+                setHasInputValue(
+                  typeof value === "string" && value.trim() !== "",
+                )
+              }
               onPlaceSelect={(place) => {
-                console.log(place);
+                console.log("Destination:", place);
 
-                const value = place.formattedAddress || place.displayName || "";
+                if (!place?.location) {
+                  console.error("Invalid destination place");
+                  return;
+                }
 
+                // const value = place.formattedAddress || place.displayName || "";
+
+                const value = {
+                  lat: place.location.lat(),
+                  lng: place.location.lng(),
+                };
+
+                // UPDATE DESTINATION
                 setDestination(value);
+                // setDestination(String(value));
 
-                setHasInputValue(value.trim() !== "");
+                // KEEP PANEL OPEN
+                // setHasInputValue(value.trim() !== "");
+                setHasInputValue(true);
 
-                debounceCalculateRoute();
+                // AUTO SEARCH
+                if (debounceCalculateRoute) debounceCalculateRoute();
               }}
             />
           </div>
 
-          {/* SEARCH BUTTON */}
-          <button type="button" className="search-btn" onClick={calculateRoute}>
+          {/* SEARCH ROUTE BUTTON */}
+          <button
+            type="button"
+            className="search-btn"
+            onClick={() => {
+              // setTimeout(() => {
+              //   // IMPORTANT CHANGE:
+              //   // ENSURE ROUTE CALCULATES ONLY WHEN BUTTON CLICKED
+
+              //   if (calculateRoute) calculateRoute();
+              // }, 0);
+
+              if (typeof calculateRoute === "function") calculateRoute();
+            }}
+            // onClick={calculateRoute()}
+          >
             🔍 Search Route
           </button>
 
           {/* ACTION BUTTONS */}
           <div className="route-actions">
+            {/* ADD STOP */}
             <button type="button" onClick={addStopField}>
               + Add Stop
             </button>
 
+            {/* CURRENT LOCATION */}
             <button type="button" onClick={goToCurrentLocation}>
               {locating ? "Locating..." : "My Location"}
             </button>
 
+            {/* CLEAR ROUTE */}
             <button type="button" onClick={clearRoute}>
               Clear
             </button>
           </div>
 
+          {/* ERROR DISPLAY */}
           {error && <p className="map-error">{error}</p>}
         </div>
       )}

@@ -1,11 +1,13 @@
 .gmaps-route-box {
   position: absolute;
-  z-index: 10;
-  background: #fff;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
+  width: 340px;
+  background: white;
+  padding: 10px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.25s ease;
-  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .gmaps-route-box.collapsed {
@@ -26,6 +28,11 @@
   cursor: grab;
   user-select: none;
   font-weight: bold;
+  border-radius: 6px;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .panel-content {
@@ -44,6 +51,11 @@
   gap: 8px;
   margin-bottom: 12px;
   border-radius: 20px;
+}
+
+.route-input-item input {
+  flex: 1;
+  padding: 10px;
 }
 
 .full-btn {
@@ -67,6 +79,11 @@
 .route-actions button {
   flex: 1;
   padding: 8px;
+}
+
+.route-actions button,
+.remove-stop-btn {
+  cursor: pointer;
 }
 
 .remove-stop-btn {

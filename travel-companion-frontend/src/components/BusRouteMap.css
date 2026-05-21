@@ -5,56 +5,6 @@
   overflow: hidden;
 }
 
-.gmaps-route-box {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  z-index: 1000;
-  width: 340px;
-  background: white;
-  padding: 10px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-}
-
-.drag-handle {
-  cursor: grab;
-  padding: 8px;
-  background: #f0f0f0;
-  border-radius: 6px;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-.route-input-item {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.route-input-item input {
-  flex: 1;
-  padding: 10px;
-}
-
-.route-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.route-actions button,
-.remove-stop-btn {
-  cursor: pointer;
-}
-
-.map-error {
-  color: red;
-  margin-top: 10px;
-}
-
 .route-summary {
   position: absolute;
   top: 20px;

@@ -11,7 +11,6 @@ export default function PlaceAutocompleteInput({
   const autocompleteRef = useRef(null);
 
   useEffect(() => {
-    // let autocomplete;
     let isMounted = true;
 
     const init = async () => {
@@ -39,22 +38,25 @@ export default function PlaceAutocompleteInput({
         onPlaceSelect(place);
       };
 
-      // KEEP PANEL EXPANDED WHILE TYPING
+      // KEEP PANEL EXPANDED WHILE TYPING | INPUT CHANGE
       const onInputHandler = (e) => {
         const value = e.target.value || "";
 
-        if (onValueChange) onValueChange(value);
+        // if (onValueChange) onValueChange(value);
+        onValueChange?.(value);
       };
 
       // FOCUS
-      const handleFocus = () => {
-        if (onFocus) onFocus();
-      };
+      // const handleFocus = () => {
+      //   if (onFocus) onFocus();
+      // };
+      const handleFocus = () => onFocus?.();
 
       // BLUR
-      const handleBlur = () => {
-        if (onBlur) onBlur();
-      };
+      // const handleBlur = () => {
+      //   if (onBlur) onBlur();
+      // };
+      const handleBlur = () => onBlur?.();
 
       autocomplete.addEventListener("gmp-placeselect", onPlaceSelectHandler);
 
@@ -103,4 +105,13 @@ export default function PlaceAutocompleteInput({
   }, [placeholder, onPlaceSelect, onFocus, onBlur, onValueChange]);
 
   return <div ref={containerRef} />;
+  // return (
+  //   <input
+  //     type="text"
+  //     ref={containerRef}
+  //     placeholder={placeholder}
+  //     onFocus={onFocus}
+  //     onBlur={onBlur}
+  //   />
+  // );
 }
